@@ -1,0 +1,131 @@
+{
+  "name": "github-companion",
+  "displayName": "GitHub Companion",
+  "description": "Gère ton projet GitHub (création de repo, commit, push) via des boutons groupés — sans automatisation cachée, avec transparence totale sur les commandes exécutées.",
+  "version": "0.0.11",
+  "publisher": "joseph-dev",
+  "icon": "resources/icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:githubCompanion.panel"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "githubCompanion.openPanel",
+        "title": "GitHub Companion: Ouvrir le panneau",
+        "icon": "$(github)"
+      },
+      {
+        "command": "githubCompanion.initLocalRepo",
+        "title": "GitHub Companion: Initialiser un repo local"
+      },
+      {
+        "command": "githubCompanion.createRepo",
+        "title": "GitHub Companion: Créer un repo GitHub (cloud)"
+      },
+      {
+        "command": "githubCompanion.commit",
+        "title": "GitHub Companion: Commit local"
+      },
+      {
+        "command": "githubCompanion.push",
+        "title": "GitHub Companion: Push vers le cloud"
+      },
+      {
+        "command": "githubCompanion.pull",
+        "title": "GitHub Companion: Mettre à jour"
+      },
+      {
+        "command": "githubCompanion.checkUpdates",
+        "title": "GitHub Companion: Vérifier les mises à jour"
+      },
+      {
+        "command": "githubCompanion.setToken",
+        "title": "GitHub Companion: Modifier le token du compte actif"
+      },
+      {
+        "command": "githubCompanion.addAccount",
+        "title": "GitHub Companion: Ajouter un compte GitHub"
+      },
+      {
+        "command": "githubCompanion.switchAccount",
+        "title": "GitHub Companion: Changer de compte GitHub"
+      },
+      {
+        "command": "githubCompanion.securityAudit",
+        "title": "GitHub Companion: Auditer la sécurité du token (fuites)"
+      },
+      {
+        "command": "githubCompanion.journal",
+        "title": "GitHub Companion: Historique des actions (annuler un commit)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "githubCompanion",
+          "title": "GitHub Companion",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "githubCompanion": [
+        {
+          "type": "webview",
+          "id": "githubCompanion.panel",
+          "name": "GitHub Companion"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "GitHub Companion",
+      "properties": {
+        "githubCompanion.defaultBranch": {
+          "type": "string",
+          "default": "main",
+          "description": "Nom de la branche par défaut créée avec les nouveaux repos."
+        },
+        "githubCompanion.defaultVisibility": {
+          "type": "string",
+          "enum": [
+            "private",
+            "public"
+          ],
+          "default": "private",
+          "description": "Visibilité par défaut des nouveaux repos créés."
+        },
+        "githubCompanion.autoSync": {
+          "type": "boolean",
+          "default": false,
+          "description": "Si activé, un commit local déclenche aussi un push vers le cloud."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "bash test/run-all.sh",
+    "test:coverage": "GC_COVERAGE=1 bash test/run-all.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "c8": "^12.0.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.2",
+    "simple-git": "^3.24.0"
+  }
+}

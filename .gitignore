@@ -1,0 +1,13 @@
+node_modules/
+out/
+coverage/
+.v8-coverage/
+.rigour/
+package-lock.json
+*.vsix
+.env
+.env.*
+*.log
+.DS_Store
+.vscode-test/
+*.tsbuildinfo

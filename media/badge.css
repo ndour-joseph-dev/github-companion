@@ -1,0 +1,35 @@
+/* Badge « commits à récupérer » et coche de validation, avec animations. */
+.btn-badge {
+  margin-left: auto;
+  background: var(--vscode-editorWarning-foreground, #cca700);
+  color: #1e1e1e;
+  font-size: 11px; font-weight: 600;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 9px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.btn-badge.pop {
+  animation: badge-pop 0.45s ease-out,
+             badge-pulse 2.4s ease-in-out 0.45s infinite;
+}
+@keyframes badge-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.25); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(204, 167, 0, 0.55); }
+  50%      { box-shadow: 0 0 0 4px rgba(204, 167, 0, 0); }
+}
+.btn-ok {
+  margin-left: auto;
+  color: var(--vscode-testing-iconPassed, #2ea043);
+  font-weight: 700; font-size: 13px;
+  display: inline-flex; align-items: center;
+  animation: ok-pop 0.4s ease-out;
+}
+@keyframes ok-pop {
+  0%   { transform: scale(0.3) rotate(-25deg); opacity: 0; }
+  70%  { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}

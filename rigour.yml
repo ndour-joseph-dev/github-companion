@@ -1,0 +1,55 @@
+# Rigour — garde-fous locaux avant commit/push, en complément de SonarQube
+# (voir sonar-project.properties : Sonar garde le suivi projet, Rigour le diff).
+#
+# Tout se lance via Bun (seul gestionnaire du projet) :
+#   bunx -y @rigour-labs/cli doctor
+#   bunx -y @rigour-labs/cli check
+#   bunx -y @rigour-labs/cli review --base main
+#
+# Référence des clés : https://github.com/rigour-labs/rigour/blob/main/docs/CONFIG_REFERENCE.md
+
+# Fichiers que tous les contrôles, revues et hooks ignorent.
+# Aligné sur les exclusions Sonar, plus les artefacts propres à Rigour.
+ignore:
+  - node_modules/**
+  - out/**            # sortie de tsc
+  - coverage/**       # rapport c8 (lcov.info)
+  - .rigour/**        # index généré (patterns.json ≈ 4 600 lignes)
+  - resources/**
+  - .vscode/**
+  - '*.vsix'
+  - bun.lock
+
+commands:
+  # Chaque commande remplace celle que Rigour trouverait dans node_modules et
+  # tourne aussi par `rigour check` et avant chaque push. Sans shell :
+  # pas de pipe ni de `&&` (les scripts s'en chargent).
+  test: 'bash test/run-all.sh'
+  typecheck: 'bunx tsc --noEmit -p ./'
+  # Pas de lint ni de format : le projet n'installe ni ESLint ni Prettier.
+
+gates:
+  # Le dépôt documente tout dans README.md ; les défauts réclament en plus
+  # docs/SPEC.md, docs/ARCH.md, docs/DECISIONS.md et docs/TASKS.md.
+  required_files:
+    - README.md
+
+  # `import 'vscode'` est fourni par l'hôte de l'extension
+  # (engines.vscode + @types/vscode), ce n'est pas une dépendance npm.
+  # Attention 1 : cette liste REMPLACE les défauts, donc on les remet tels quels.
+  # Attention 2 : en YAML entre apostrophes, les backslashs sont littéraux —
+  # écrire '\\.css$' donnerait la regex \\.css$ (backslash littéral + joker) et
+  # ne couvrirait plus les CSS. C'est bien '\.css$' (un seul backslash) qu'il faut.
+  hallucinated_imports:
+    ignore_patterns:
+      - '^vscode$'
+      - '\.css$'
+      - '\.scss$'
+      - '\.less$'
+      - '\.svg$'
+      - '\.png$'
+      - '\.jpg$'
+      - '\.json$'
+      - '\.wasm$'
+      - '\.graphql$'
+      - '\.gql$'

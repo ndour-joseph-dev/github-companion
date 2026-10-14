@@ -1,0 +1,140 @@
+/* Barre de comptes GitHub (haut du panneau) : sélecteur + actions + état. */
+.accounts {
+  margin-bottom: 10px;
+}
+.accounts-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--vscode-descriptionForeground);
+}
+/* Liste déroulante maison : le <select> natif s'ouvre dans une fenêtre système
+   que le webview ne sait pas placer (« popup » de quelques pixels, invisible).
+   Ici le menu vit dans le DOM du panneau : z-index maîtrisé, style VS Code. */
+.dropdown {
+  position: relative;
+}
+.dropdown-toggle {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+  background-color: var(--vscode-dropdown-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-dropdown-border, rgba(128, 128, 128, .4));
+  border-radius: 4px;
+}
+.dropdown-toggle:hover {
+  border-color: var(--vscode-focusBorder, rgba(128, 128, 128, .8));
+}
+.dropdown-toggle:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, #3794ff);
+  outline-offset: -1px;
+}
+.dropdown-toggle:disabled {
+  opacity: .65;
+  cursor: default;
+}
+.dropdown-value {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dropdown-chevron {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  opacity: .8;
+}
+.dropdown-toggle[aria-expanded="true"] .dropdown-chevron {
+  transform: rotate(180deg);
+}
+/* Menu ancré sous le bouton : au-dessus du reste du panneau (z-index local),
+   jamais dans un autre contexte d'empilement que celui du panneau. */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--vscode-dropdown-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-dropdown-border, rgba(128, 128, 128, .4));
+  border-radius: 4px;
+  box-shadow: 0 4px 12px var(--vscode-widget-shadow, rgba(0, 0, 0, .35));
+}
+.dropdown-menu[hidden] {
+  display: none;
+}
+.dropdown-item {
+  display: block;
+  padding: 5px 10px;
+  cursor: pointer;
+  color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+}
+.dropdown-item:hover,
+.dropdown-item.active {
+  background: var(--vscode-list-hoverBackground, rgba(90, 93, 94, .3));
+}
+.dropdown-item[aria-selected="true"] {
+  font-weight: 600;
+}
+/* Coche de sélection dessinée en CSS : aucun élément interne à cliquer. */
+.dropdown-item[aria-selected="true"]::after {
+  content: "✓";
+  float: right;
+  opacity: .8;
+}
+/* Conteneur parent : le titre d'abord, puis la rangée des trois actions. */
+.accounts-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 6px;
+}
+/* Boutons à la largeur de leur libellé (w-fit) : la rangée reste compacte. */
+.accounts-actions button {
+  width: fit-content;
+  padding: 5px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.accounts-actions button svg {
+  width: 14px;
+  height: 14px;
+}
+/* Illustration « jeton + » : un peu plus grande, sinon le badge est illisible. */
+#btn-token svg {
+  width: 16px;
+  height: 16px;
+}
+#btn-del-account:hover {
+  color: var(--vscode-errorForeground, #f14c4c);
+  border-color: currentColor;
+}
+/* État du compte actif, affiché en tête de la zone « État ». */
+#account-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#account-status:not(:empty) {
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+  border-bottom: 1px dashed var(--vscode-widget-border, rgba(128, 128, 128, .4));
+}
+

@@ -1,0 +1,15 @@
+.vscode/**
+.vscode-test/**
+src/**
+test/**
+.gitignore
+.vscodeignore
+**/tsconfig.json
+**/*.map
+**/*.ts
+bun.lock
+package-lock.json
+node_modules/@types/**
+node_modules/typescript/**
+**/*.md
+!README.md
