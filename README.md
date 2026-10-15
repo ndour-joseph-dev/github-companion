@@ -50,6 +50,10 @@ remet le compteur à zéro au lieu d'afficher l'état d'avant.
 - Le bloc d'état affiche le **dépôt cloud** du dossier (`owner/repo`, lien cliquable), le
   **propriétaire** et le **rôle** du compte actif : propriétaire, administrateur
   d'organisation, collaborateur (avec ou sans droit de pousser), ou aucun accès.
+- **Une information par bloc** : chaque élément de la zone d'état (compte actif, profil,
+  nombre de dépôts, branche, remote, dépôt, rôle, correspondance, dernier commit, message,
+  fichiers modifiés…) est rendu dans **son propre conteneur**, espacé verticalement.
+  Les lignes ne se collent plus et un élément ajouté demain hérite du même espacement.
 - **Correspondance dépôt ↔ compte** : l'état dit si le dépôt ouvert est bien celui du compte
   actif (`oui` / `non — dépôt de « tel compte », compte actif : « tel compte » en badge`). Le nom du
   **compte actif** est mis en **badge rouge** dès qu'il diffère du propriétaire : deux noms

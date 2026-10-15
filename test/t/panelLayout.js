@@ -52,6 +52,17 @@ a.ok(pair.indexOf('grid') === -1, 'plus aucune grille ne force deux colonnes');
 a.inc(rule(panelCss, '.pair-item'), 'align-items: flex-start',
   'chaque action (bouton + explication) se cale à gauche');
 
+// Zone d'état : chaque information est son propre <div> et porte son espacement
+// vertical (4 px en haut, 4 px en bas) — les lignes ne se collent plus, sans
+// dépendre du gap du conteneur.
+const stateRow = rule(panelCss, '.status-row');
+a.inc(stateRow, 'display: flex', 'une ligne d’état aligne son libellé et sa valeur');
+a.inc(stateRow, 'padding-block: 4px', 'chaque information respire : 4 px en haut et en bas');
+a.inc(rule(panelCss, '.commit-block'), 'padding-block: 4px',
+  'la liste des commits distants suit le même rythme vertical');
+a.eq(rule(panelCss, '.commit-list').includes('margin: 2px 0 4px 96px'), false,
+  'la liste des commits ne porte plus son propre espacement vertical (le <div> le fait)');
+
 // Aucun bouton étiré : largeur = libellé + icône, pour la paire comme pour les étapes 1 à 4.
 a.inc(rule(panelCss, 'button'), 'width: fit-content', 'le bouton ne prend que la longueur de son texte');
 a.ok(!/width:\s*100%/.test(rule(panelCss, 'button')), 'l’ancienne largeur pleine des boutons est retirée');

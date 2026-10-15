@@ -1,6 +1,8 @@
 // Rendu de la zone d'état + indicateur sur « Mettre à jour » (badge / coche).
 let lastBehind = 0;
 
+// Une information de l'état = un <div> autonome (voir panel.css : chacune porte
+// son padding vertical). Le panneau ne rend jamais de texte nu dans la zone.
 function row(label, value, cls) {
   return '<div class="status-row' + (cls ? ' ' + cls : '') + '">' +
     '<span class="label">' + label + '</span>' +
@@ -127,10 +129,13 @@ function renderStatus(msg) {
   if (s.behind > 0) {
     lines.push(row('À récupérer', s.behind + ' commit(s) distant(s)', 'danger'));
     if (s.remoteCommits && s.remoteCommits.length) {
-      lines.push('<ul class="commit-list">' + s.remoteCommits.map(function (c) {
-        return '<li><strong>' + esc(c.author) + '</strong> · ' +
-          esc(c.when) + ' — ' + esc(c.subject) + '</li>';
-      }).join('') + '</ul>');
+      // La liste, elle aussi, dans son <div> : la zone d'état ne rend jamais un
+      // élément nu (chaque bloc porte son propre espacement vertical).
+      lines.push('<div class="commit-block"><ul class="commit-list">' +
+        s.remoteCommits.map(function (c) {
+          return '<li><strong>' + esc(c.author) + '</strong> · ' +
+            esc(c.when) + ' — ' + esc(c.subject) + '</li>';
+        }).join('') + '</ul></div>');
     }
   }
   const synced = s.modified === 0 && s.ahead === 0 && s.behind === 0 && s.hasRemote &&

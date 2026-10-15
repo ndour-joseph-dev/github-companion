@@ -135,10 +135,15 @@ textarea:focus {
   flex-direction: column;
   gap: 4px;
 }
+/* Chaque information de la zone d'état est un <div> à elle : le rythme vertical
+   lui appartient (4 px en haut, 4 px en bas) au lieu de dépendre d'un gap du
+   conteneur. Les lignes se lisent une par une, sans se coller (le gap du parent
+   sépare les blocs : comptes, sélecteur de dépôts, état). */
 .status-row {
   display: flex;
   gap: 6px;
   line-height: 1.4;
+  padding-block: 4px;
 }
 .status-row .label {
   color: var(--vscode-descriptionForeground);
@@ -182,8 +187,13 @@ textarea:focus {
 .status-link:hover {
   opacity: 0.85;
 }
+/* Liste des commits distants : elle aussi dans son <div> (même rythme vertical
+   que les lignes d'état), et alignée sur la colonne des valeurs. */
+.commit-block {
+  padding-block: 4px;
+}
 .commit-list {
-  margin: 2px 0 4px 96px;
+  margin: 0 0 0 96px;
   padding: 0;
   list-style: none;
   font-size: 11px;

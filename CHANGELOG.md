@@ -45,13 +45,25 @@ cloud, et le compte actif ne se confond plus avec le propriétaire affiché.
   (« propriétaire d'après l'URL du remote ») et un 404 est annoncé « accès refusé,
   **ou** dépôt supprimé » — GitHub répond la même chose dans les deux cas.
 
+### Modifié
+
+- **Zone d'état aérée, une information par conteneur** : chaque ligne (Actif,
+  Profil, Repos, Branche, Remote, Dépôt, Rôle, Correspondance, Dernier commit,
+  Message, Modifiés…) est rendue dans **son propre `<div>`**, qui porte désormais
+  son espacement vertical (4 px en haut, 4 px en bas — le pas d'espacement du
+  panneau). La liste des commits distants suit le même rythme dans son bloc. Les
+  lignes ne se collent plus, et la lisibilité ne dépend plus du `gap` du
+  conteneur : un élément ajouté demain hérite du même espacement.
+
 ### Interne
 
 - Nouveau module `features/checkUpdates/store.ts` (mémoire du verdict distant,
   sans `vscode`, donc testable) + `head` mémorisé avec le résultat distant.
 - Nouvelles suites `remoteCache` (péremption, rattachement au dépôt, au commit,
-  preuve de push) et `accountMessages` (messages du garde-fou de compte, et
-  **aucun login de compte en dur** dans `src/` et `media/`).
+  preuve de push), `accountMessages` (messages du garde-fou de compte, et
+  **aucun login de compte en dur** dans `src/` et `media/`) et `statusLayout`
+  (chaque information de la zone d'état est dans son `<div>`, jamais de texte nu,
+  pour les états complets, dépôt vide, chargement et erreurs).
 
 ## [0.0.13] - 2026-10-15
 
