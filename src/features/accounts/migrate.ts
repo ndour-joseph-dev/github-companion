@@ -31,6 +31,7 @@ export async function ensureMigrated(context: vscode.ExtensionContext): Promise<
     login: p?.login || '',
     htmlUrl: p?.htmlUrl,
     repoCount: p?.repoCount,
+    repos: p?.repos,
     token: legacy
   };
   await writeAccounts(context, [acc, ...accounts]);

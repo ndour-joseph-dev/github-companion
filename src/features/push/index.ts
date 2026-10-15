@@ -6,7 +6,7 @@ import { handleError } from '../../core/errorHandler';
 import { isHeadDetached, hasNoCommitsYet, getRemoteUrl } from '../../git/gitGuards';
 import { getLastRemoteCheck, clearLastRemoteCheck } from '../checkUpdates';
 import { withGitLock } from '../../git/gitLock';
-import { localHead } from '../../git/remoteHead';
+import { localHead, remoteHead } from '../../git/remoteHead';
 import { preflight } from '../guards';
 import { confirmBehindPush, finishPush } from './steps';
 
@@ -49,7 +49,10 @@ async function pushImpl(context: vscode.ExtensionContext): Promise<void> {
     if (!pf.ok) return;
 
     const status = await git.raw().status();
-    const remote = getLastRemoteCheck();
+    const branch = status.current ?? defaultBranch;
+    const before = await localHead(git.raw());
+    // Le verdict mémorisé ne ressort que s'il décrit ce dépôt ET ce commit.
+    const remote = getLastRemoteCheck({ remoteUrl, head: before });
     const behind = remote ? remote.behind : status.behind;
     if (!(await confirmBehindPush(behind))) return;
 
@@ -64,8 +67,14 @@ async function pushImpl(context: vscode.ExtensionContext): Promise<void> {
       return;
     }
 
-    const hasUpstream = !!status.tracking;
-    if (hasUpstream && status.ahead === 0 && (!remote || remote.ahead === 0)) {
+    // « Rien à pousser » se PROUVE sur le cloud, jamais avec une référence
+    // locale : `status.ahead` compare à origin/<branche> déjà rapatriée, qui
+    // peut venir d'un autre dépôt (dépôt GitHub supprimé puis liaison à un
+    // dépôt neuf et vide) → l'extension refusait de pousser un dossier plein.
+    // Sans preuve (branche absente du cloud, réseau injoignable), on pousse :
+    // git répond « Everything up-to-date » s'il n'y a réellement rien.
+    const distant = await remoteHead(git.raw(), token, branch);
+    if (before && distant && before === distant) {
       vscode.window.showInformationMessage(
         'Rien à pousser : ton dépôt est déjà synchronisé avec le cloud.'
       );
@@ -74,8 +83,6 @@ async function pushImpl(context: vscode.ExtensionContext): Promise<void> {
 
     // Feedback visible pendant l'envoi (un push GitHub prend quelques secondes) :
     // sans cela, on croit à tort que le clic n'a rien fait et on reclique.
-    const before = await localHead(git.raw());
-    const branch = status.current ?? defaultBranch;
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
@@ -88,7 +95,7 @@ async function pushImpl(context: vscode.ExtensionContext): Promise<void> {
       }
     );
     clearLastRemoteCheck();
-    const ahead = hasUpstream ? status.ahead : 0;
+    const ahead = status.tracking ? status.ahead : 0;
     await finishPush(context, git.raw(), token, branch, before, ahead);
   } catch (err: any) {
     handleError('push', err);

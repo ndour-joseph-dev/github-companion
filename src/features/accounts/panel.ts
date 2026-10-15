@@ -9,7 +9,8 @@ import type { AccountInfo } from './store';
 
 /**
  * Liste sans tokens, prête à être envoyée au webview.
- * Complète au passage les profils manquants (nom, page, nombre de dépôts).
+ * Complète au passage les profils manquants (nom, page, nombre de dépôts,
+ * liste des dépôts détenus).
  */
 export async function accountsForPanel(
   context: vscode.ExtensionContext
@@ -22,7 +23,8 @@ export async function accountsForPanel(
     login: a.login,
     active: a.id === active?.id,
     htmlUrl: a.htmlUrl,
-    repoCount: a.repoCount
+    repoCount: a.repoCount,
+    repos: a.repos
   }));
 }
 

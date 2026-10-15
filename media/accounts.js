@@ -6,6 +6,8 @@
 let accountList = [];
 let menuOpen = false;
 let menuIndex = -1;
+/** Liste des dépôts du compte actif : consultable, jamais sélectionnable. */
+let repoMenuOpen = false;
 
 function accountSelect() {
   return document.getElementById('account-select');
@@ -43,6 +45,8 @@ function attr(s) {
 function renderNotice(text) {
   document.getElementById('account-status').innerHTML =
     row('Comptes', esc(text || 'indisponibles'), 'danger');
+  // Les dépôts viennent du profil du compte : la panne les rend douteux aussi.
+  renderRepoList(true);
 }
 
 /** État du compte sélectionné : nom, page GitHub, nombre de dépôts. */
@@ -67,6 +71,88 @@ function renderAccountStatus() {
       post('openExternal', { url: a.dataset.url });
     });
   });
+}
+
+// --- Liste des dépôts du compte actif -------------------------------------
+// Le nombre de dépôts reste affiché ci-dessus ; la liste exacte est consultable
+// ici, en LECTURE SEULE : aucune entrée n'est cliquable, rien n'est transmis à
+// l'extension (il n'y a pas de « dépôt actif » à choisir — c'est le dossier
+// ouvert qui décide, via son remote).
+
+function repoSelect() {
+  return document.getElementById('repo-select');
+}
+function repoMenu() {
+  return document.getElementById('repo-menu');
+}
+/** Entrées <li> de la liste des dépôts. */
+function repoOptions() {
+  return Array.prototype.slice.call(repoMenu().children || []);
+}
+
+/** Dépôt du dossier ouvert, tel que mémorisé par l'état (status.js). */
+function currentRepoName() {
+  const s = vscode.getState ? vscode.getState() : null;
+  const repo = s && s.status && s.status.data ? s.status.data.repo : null;
+  return repo && repo.fullName ? String(repo.fullName) : '';
+}
+
+/** Libellé du bouton : ce que l'on peut réellement consulter. */
+function repoLabel(active) {
+  if (!active) return 'Aucun dépôt';
+  const repos = active.repos;
+  if (repos && repos.length > 0) return repos.length + ' dépôt(s)';
+  if (repos) return 'Aucun dépôt'; // liste reçue, mais réellement vide
+  return typeof active.repoCount === 'number'
+    ? active.repoCount + ' dépôt(s) — liste indisponible'
+    : 'Liste des dépôts indisponible';
+}
+
+/**
+ * Repeint la liste des dépôts du compte actif. `unavailable` signale une panne
+ * du profil côté extension : on ne montre alors ni liste ni compteur périmés.
+ */
+function renderRepoList(unavailable) {
+  const toggle = repoSelect();
+  const active = activeAccount();
+  const repos = !unavailable && active && active.repos ? active.repos : [];
+  document.getElementById('repo-current').textContent = unavailable
+    ? 'Liste indisponible'
+    : repoLabel(active);
+  toggle.disabled = repos.length === 0;
+  toggle.title = repos.length
+    ? 'Dépôts du compte actif — clique pour voir la liste'
+    : 'Liste des dépôts indisponible (compte non résolu ou hors ligne)';
+  // Le dépôt du dossier ouvert est signalé : la liste sert à vérifier la
+  // correspondance avec le compte actif.
+  const current = currentRepoName().toLowerCase();
+  repoMenu().innerHTML = repos.map(function (name, i) {
+    const here = current && String(name).toLowerCase() === current;
+    const label = name + (here ? ' · dossier ouvert' : '');
+    return '<li id="repo-option-' + i + '" class="dropdown-item" role="option" title="' +
+      attr(label) + '">' + esc(label) + '</li>';
+  }).join('');
+  if (toggle.disabled && repoMenuOpen) closeRepoMenu();
+}
+
+function openRepoMenu() {
+  const toggle = repoSelect();
+  if (toggle.disabled || repoOptions().length === 0) return;
+  repoMenuOpen = true;
+  repoMenu().hidden = false;
+  toggle.setAttribute('aria-expanded', 'true');
+}
+
+function closeRepoMenu() {
+  if (!repoMenuOpen) return;
+  repoMenuOpen = false;
+  repoMenu().hidden = true;
+  repoSelect().setAttribute('aria-expanded', 'false');
+}
+
+function toggleRepoMenu() {
+  if (repoMenuOpen) closeRepoMenu();
+  else openRepoMenu();
 }
 
 /** Surligne la n-ième option (navigation clavier), sans la sélectionner. */
@@ -132,6 +218,7 @@ function renderAccounts(list) {
     el.onclick = () => switchTo(el.dataset.id);
   });
   renderAccountStatus();
+  renderRepoList();
 }
 
 accountSelect().onclick = () => toggleMenu();
@@ -154,21 +241,35 @@ accountSelect().onkeydown = (e) => {
     closeMenu();
   }
 };
-// Clic ailleurs dans le panneau : le menu se referme (comme un vrai sélecteur).
-// Un clic dans le menu ou sur le bouton est laissé à leurs gestionnaires : le
-// fermer ici annulerait le choix du compte avant qu'il ne soit transmis.
+// Clic ailleurs dans le panneau : les menus ouverts se referment (comme un vrai
+// sélecteur). Un clic dans un menu ou sur son bouton est laissé à leurs
+// gestionnaires : le fermer ici annulerait le choix du compte avant qu'il ne
+// soit transmis.
 document.addEventListener('click', (e) => {
-  if (!menuOpen || !e.target) return;
-  const menu = accountMenu();
   const t = e.target;
-  if (menu.contains(t) || accountSelect().contains(t)) return;
-  closeMenu();
+  if (!t) return;
+  if (menuOpen && !accountMenu().contains(t) && !accountSelect().contains(t)) closeMenu();
+  if (repoMenuOpen && !repoMenu().contains(t) && !repoSelect().contains(t)) closeRepoMenu();
 });
+
+// Liste des dépôts : le bouton ouvre/ferme la liste (aucune sélection possible).
+repoSelect().onclick = () => toggleRepoMenu();
+repoSelect().onkeydown = (e) => {
+  if (e.key === 'Escape' || e.key === 'Tab') closeRepoMenu();
+  else if ((e.key === 'Enter' || e.key === ' ') && !repoMenuOpen) {
+    e.preventDefault();
+    openRepoMenu();
+  }
+};
 
 document.getElementById('btn-add-account').onclick = () => post('account', { action: 'add' });
 document.getElementById('btn-del-account').onclick = () => {
   const active = activeAccount();
   if (active) post('account', { action: 'remove', id: active.id });
 };
+// Rafraîchir : la liste des dépôts est une photo de GitHub, conservée par
+// l'extension. Elle ne peut pas savoir seule qu'un dépôt a été créé, renommé ou
+// supprimé depuis : ce bouton repose la question et l'extension repousse l'état.
+document.getElementById('btn-refresh').onclick = () => post('refresh');
 
 

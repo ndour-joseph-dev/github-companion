@@ -19,6 +19,8 @@ export interface RepoStatus {
   conflicts: number;
   lastCommit?: string;
   lastAuthor?: string;
+  /** Date du dernier commit (ms) : le panneau affiche la date et l'heure. */
+  lastCommitAt?: number;
   /** Infos issues du dernier "Vérifier" explicite */
   remoteCommits?: RemoteCommit[];
   checkedAt?: number;
@@ -43,17 +45,26 @@ export async function buildStatus(git: SimpleGit): Promise<RepoStatus> {
 
   let lastCommit: string | undefined;
   let lastAuthor: string | undefined;
+  let lastCommitAt: number | undefined;
+  let lastCommitHash: string | undefined;
   try {
     const log = await git.log({ maxCount: 1 });
     if (log.latest) {
       lastCommit = log.latest.message.split('\n')[0];
       lastAuthor = log.latest.author_name;
+      lastCommitHash = log.latest.hash;
+      const when = Date.parse(log.latest.date);
+      // Date illisible : on laisse undefined plutôt qu'un NaN dans l'état.
+      if (!Number.isNaN(when)) lastCommitAt = when;
     }
   } catch {
     /* aucun commit */
   }
 
-  const remote = getLastRemoteCheck();
+  // Le verdict distant mémorisé ne vaut que pour CE dépôt et CE commit : après
+  // un changement de remote ou un commit local, le comparer à l'affichage
+  // reviendrait à afficher l'état d'un autre dépôt (ou d'un autre moment).
+  const remote = getLastRemoteCheck({ remoteUrl: originUrl, head: lastCommitHash });
   // Prefer explicit check results for behind/ahead when available
   const behind = remote ? remote.behind : status.behind;
   // "ahead" vient du status live dès qu'un upstream existe (sinon du dernier check)
@@ -74,6 +85,7 @@ export async function buildStatus(git: SimpleGit): Promise<RepoStatus> {
     conflicts: status.conflicted.length,
     lastCommit,
     lastAuthor,
+    lastCommitAt,
     remoteCommits: remote?.commits,
     checkedAt: remote?.checkedAt,
     hasTracking: remote ? remote.hasTracking : !!status.tracking,

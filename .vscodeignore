@@ -13,3 +13,16 @@ node_modules/@types/**
 node_modules/typescript/**
 **/*.md
 !README.md
+!CHANGELOG.md
+
+# Artefacts locaux du developpement : rien de tout ca ne doit se retrouver
+# dans l'extension installee chez l'utilisateur. `vsce` ne lit pas le
+# .gitignore, ces exclusions doivent donc etre repetees ici.
+coverage/**
+.scannerwork/**
+.rigour/**
+.vscode-test/**
+rigour.yml
+sonar-project.properties
+*.vsix
+**/*.log

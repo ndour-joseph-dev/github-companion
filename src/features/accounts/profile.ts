@@ -1,30 +1,20 @@
 import * as vscode from 'vscode';
-import { readAccounts, writeAccounts, resolveProfile } from './store';
-
-// Un seul essai par compte et par session : évite de figer le panneau hors ligne.
-const tried = new Set<string>();
+import { readAccounts } from './store';
+import { attemptedRecently, needsRefresh, refreshProfiles } from './refresh';
 
 /**
- * Complète les comptes dont le profil GitHub n'a pas encore été résolu :
- * comptes ajoutés hors ligne, ou créés avant l'arrivée de la page profil.
- * Aucune requête réseau si l'information est déjà présente.
+ * Complète ou remet à jour les comptes dont la photo GitHub n'est pas utilisable :
+ * comptes ajoutés hors ligne, dont le nom n'a jamais été résolu, ou dont la liste
+ * de dépôts est trop ancienne (REPOS_TTL_MS) pour être encore crue.
+ *
+ * Aucune requête réseau si la photo est fraîche, et jamais deux essais rapprochés
+ * pour un même compte : le panneau peut être reconstruit ou réaffiché plusieurs
+ * fois d'affilée, GitHub n'a pas à le savoir.
  */
 export async function ensureProfiles(context: vscode.ExtensionContext): Promise<void> {
-  const accounts = await readAccounts(context);
-  const todo = accounts.filter(
-    (a) => (!a.login || a.repoCount === undefined) && !tried.has(a.id)
-  );
+  const now = Date.now();
+  const todo = (await readAccounts(context))
+    .filter((a) => needsRefresh(a, now) && !attemptedRecently(a.id, now));
   if (todo.length === 0) return;
-  todo.forEach((a) => tried.add(a.id));
-
-  let changed = false;
-  for (const a of todo) {
-    const p = await resolveProfile(a.token);
-    if (!p) continue;
-    a.login = p.login;
-    a.htmlUrl = p.htmlUrl;
-    a.repoCount = p.repoCount;
-    changed = true;
-  }
-  if (changed) await writeAccounts(context, accounts);
+  await refreshProfiles(context, todo.map((a) => a.id));
 }

@@ -11,3 +11,6 @@ package-lock.json
 .DS_Store
 .vscode-test/
 *.tsbuildinfo
+
+# Artefacts locaux du scanner SonarQube (analyse en conteneur).
+.scannerwork/

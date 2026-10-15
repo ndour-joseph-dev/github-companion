@@ -7,7 +7,7 @@ import { runCommitPrompt } from './features/commit';
 import { runPush } from './features/push';
 import { runPull } from './features/pull';
 import { runCheckUpdates } from './features/checkUpdates';
-import { resetToken, runAddAccount, runSwitchAccount } from './features/accounts';
+import { resetToken, runAddAccount, runSwitchAccount, runRefresh } from './features/accounts';
 import { registerSecurityCommands } from './core/security';
 import { registerJournalCommand } from './features/journal';
 
@@ -40,6 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('githubCompanion.push', refresh(() => runPush(context))),
     vscode.commands.registerCommand('githubCompanion.pull', refresh(() => runPull(context))),
     vscode.commands.registerCommand('githubCompanion.checkUpdates', refresh(() => runCheckUpdates(context))),
+    vscode.commands.registerCommand('githubCompanion.refresh', refresh(() => runRefresh(context))),
     vscode.commands.registerCommand('githubCompanion.setToken', refresh(() => resetToken(context))),
     vscode.commands.registerCommand('githubCompanion.addAccount', refresh(() => runAddAccount(context))),
     vscode.commands.registerCommand('githubCompanion.switchAccount', refresh(() => runSwitchAccount(context)))

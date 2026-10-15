@@ -2,11 +2,16 @@
 // Le bug d'origine était ici : l'état des comptes partait en premier, une panne
 // (réseau, stockage) faisait échouer l'envoi et la carte d'état restait vide,
 // sans le moindre message. Ces tests verrouillent « le panneau n'est jamais muet ».
-const { load, vscode, ROOT } = require('../harness/load');
+const path = require('path');
+const { load, vscode, ROOT, OUT } = require('../harness/load');
 const a = require('../harness/assert');
 const G = require('../harness/git');
 
 const { GithubCompanionViewProvider } = load('features/panel/index.js', true);
+// Instance de features/accounts/store.js DÉJÀ chargée par le panneau : c'est
+// celle-là qu'il faut nourrir. Un load() de plus en créerait une seconde,
+// sans lien avec le provider, et le faux profil ne serait jamais vu.
+const store = require(path.join(OUT, 'features/accounts/store.js'));
 
 /** Faux token : ne doit apparaître NI au webview NI dans une notification. */
 const FAKE_TOKEN = 'ghp_' + 'A'.repeat(36);
@@ -50,20 +55,23 @@ function fakeView() {
  */
 function fakeContext(options) {
   const opts = options || {};
+  // Coffre-fort clé par clé, comme VS Code : ce que l'extension écrit est
+  // relu tel quel (sans quoi un rafraîchissement ne serait pas observable).
   const mem = {};
+  if (opts.accounts) mem['githubCompanion.accounts'] = JSON.stringify(opts.accounts);
   return {
     subscriptions: [],
     extensionUri: { fsPath: ROOT, toString: () => 'file://' + ROOT },
     secrets: {
-      get: async () => {
+      get: async (k) => {
         if (opts.secretsFail) throw new Error(opts.secretsFail);
-        return opts.accounts ? JSON.stringify(opts.accounts) : undefined;
+        return mem[k];
       },
       store: async (k, v) => {
-        mem.secrets = v;
+        mem[k] = v;
       },
-      delete: async () => {
-        mem.secrets = undefined;
+      delete: async (k) => {
+        delete mem[k];
       }
     },
     globalState: {
@@ -110,14 +118,20 @@ async function waitFor(cond, ms = 500) {
   a.ok(view.webview.html.indexOf('__ACCOUNTS_CSS__') === -1, 'les URI des styles sont substituées');
 
   // 2. Comptes lisibles : transmis au panneau, sans le token (priorité n°1).
+  // Le profil GitHub est simulé — aucun réseau dans cette suite. Un compte dont
+  // la liste n'est pas datée (enregistré par une version antérieure) est
+  // réinterrogé une fois : c'est ce que fait le host au premier affichage.
+  const REPOS = ['alice/demo', 'alice/outils'];
+  store.resolveProfile = async () => ({ login: 'alice', repoCount: REPOS.length, repos: REPOS });
   const withAccount = new GithubCompanionViewProvider(fakeContext({
-    accounts: [{ id: 'alice', login: 'alice', token: FAKE_TOKEN, repoCount: 3 }]
+    accounts: [{ id: 'alice', login: 'alice', token: FAKE_TOKEN, repoCount: REPOS.length, repos: REPOS }]
   }));
   const view2 = fakeView();
   await withAccount.resolveWebviewView(view2);
   a.eq(view2.posted[1].accounts.length, 1, 'le compte enregistré est transmis au panneau');
-  a.eq(view2.posted[1].accounts[0], { id: 'alice', login: 'alice', active: true, repoCount: 3 },
-    'les comptes partent sans token ni champ interne');
+  a.eq(view2.posted[1].accounts[0],
+    { id: 'alice', login: 'alice', active: true, repoCount: REPOS.length, repos: REPOS },
+    'les comptes partent sans token ni champ interne (la liste des dépôts les accompagne)');
   a.ok(view2.posted.every((m) => JSON.stringify(m).indexOf(FAKE_TOKEN) === -1),
     'aucun message du host ne contient le token');
 
@@ -174,6 +188,24 @@ async function waitFor(cond, ms = 500) {
   const disposed = view4.posted.length;
   await repo.pushState();
   a.eq(view4.posted.length, disposed, 'après destruction, le host n’envoie plus rien');
+
+  // 8. Bouton « Rafraîchir » : des dépôts supprimés sur GitHub disparaissent de
+  // l'état au lieu de rester affichés (trois dépôts fantômes qui survivaient à la
+  // fermeture et à la réouverture de l'éditeur, et que « Vérifier les mises à
+  // jour » — un git fetch — ne pouvait pas rafraîchir).
+  store.resolveProfile = async () => ({ login: 'alice', repoCount: 0, repos: [] });
+  const before8 = view2.posted.length;
+  await view2.onMessage({ type: 'refresh' });
+  const settings8 = view2.posted.slice(before8).filter((m) => m.type === 'settings').pop();
+  a.ok(view2.posted.length > before8, 'un « refresh » du webview renvoie l’état au panneau');
+  a.ok(!!settings8, 'la liste des comptes repart après un rafraîchissement demandé');
+  a.eq(settings8.accounts[0].repos, [],
+    'les dépôts supprimés sur GitHub disparaissent au lieu de rester affichés');
+  a.eq(settings8.accounts[0].repoCount, 0, 'le compteur de dépôts suit la liste rafraîchie');
+  a.ok(vscode.__state.messages.some((m) => m.level === 'info' && m.text.indexOf('Dépôts à jour') > -1),
+    'le rafraîchissement demandé est annoncé à l’utilisateur');
+  a.ok(view2.posted.every((m) => JSON.stringify(m).indexOf(FAKE_TOKEN) === -1),
+    'même après un rafraîchissement, aucun message ne contient le token');
 
   a.done('panelHost');
 })().catch((error) => {

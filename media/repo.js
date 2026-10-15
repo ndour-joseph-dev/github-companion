@@ -18,6 +18,15 @@ function repoLink(url, text) {
 }
 
 /**
+ * Compte actif, encadré d'un badge rouge : quand le dépôt appartient à
+ * quelqu'un d'autre, les deux noms ne doivent pas se confondre à la lecture
+ * (« dépôt de « X », compte actif : Y » se lisait comme une seule identité).
+ */
+function activeBadge(login) {
+  return '<span class="account-badge">' + esc(login || 'sans nom') + '</span>';
+}
+
+/**
  * Rôle du compte actif sur le dépôt.
  * « role » est calculé par l'extension (propriétaire / administrateur /
  * collaborateur / aucun accès) ; sans lui, on compare simplement le nom du
@@ -30,7 +39,10 @@ function roleRow(repo) {
   const mine = login && login.toLowerCase() === owner.toLowerCase();
 
   if (repo.role === 'none') {
-    return row('Accès', 'Refusé à ce compte — propriétaire : ' + esc(owner), 'danger');
+    // GitHub répond 404 pour un dépôt supprimé comme pour un dépôt auquel le
+    // compte n'a pas accès : les deux causes sont donc annoncées, aucune des
+    // deux ne doit être affirmée seule.
+    return row('Accès', 'Refusé ou dépôt supprimé — propriétaire : ' + esc(owner), 'danger');
   }
   if (repo.role === 'collaborator') {
     const droit = repo.canPush === false ? 'lecture seule' : 'peut pousser';
@@ -38,7 +50,28 @@ function roleRow(repo) {
   }
   if (repo.role === 'admin') return row('Rôle', 'Administrateur du dépôt (organisation)', 'ok');
   if (repo.role === 'owner' || mine) return row('Rôle', 'Propriétaire', 'ok');
-  return row('Propriétaire', esc(owner) + ' (compte actif différent)', 'warn');
+  return row('Propriétaire',
+    esc(owner) + ' — compte actif différent : ' + activeBadge(login), 'warn');
+}
+
+/**
+ * Correspondance entre le dépôt du dossier ouvert et le compte actif : sans
+ * elle, l'utilisateur pourrait croire que le dépôt affiché est le sien alors
+ * qu'un push partirait vers le dépôt d'un autre compte.
+ */
+function matchRow(repo) {
+  const me = activeAccount();
+  const owner = String(repo.owner || '');
+  if (!me) return row('Correspondance', 'inconnue — aucun compte actif', 'warn');
+  const login = String(me.login || '');
+  if (login && login.toLowerCase() === owner.toLowerCase()) {
+    return row('Correspondance', 'oui — dépôt du compte actif', 'ok');
+  }
+  if (repo.role === 'none') {
+    return row('Correspondance', 'non — accès refusé ou dépôt supprimé', 'danger');
+  }
+  return row('Correspondance',
+    'non — dépôt de « ' + esc(owner) + ' », compte actif : ' + activeBadge(login), 'warn');
 }
 
 /** Lignes d'état du dépôt cloud ; vide si le remote n'est pas exploitable. */
@@ -46,5 +79,5 @@ function repoRows(s) {
   if (!s || !s.repo || !s.repo.fullName) return [];
   const repo = s.repo;
   const name = repo.webUrl ? repoLink(repo.webUrl, repo.fullName) : esc(repo.fullName);
-  return [row('Dépôt', name), roleRow(repo)];
+  return [row('Dépôt', name), roleRow(repo), matchRow(repo)];
 }

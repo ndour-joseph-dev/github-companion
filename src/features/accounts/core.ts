@@ -42,6 +42,10 @@ export async function saveToken(
     login: p?.login || '',
     htmlUrl: p?.htmlUrl,
     repoCount: p?.repoCount,
+    repos: p?.repos,
+    // La liste vient d'être lue : sa date évite une requête inutile à la
+    // prochaine ouverture du panneau (undefined = listage non obtenu).
+    reposUpdatedAt: p?.repos !== undefined ? Date.now() : undefined,
     token: clean
   };
   await writeAccounts(context, [...accounts, acc]);
@@ -65,6 +69,8 @@ export async function replaceToken(
     target.login = p.login;
     target.htmlUrl = p.htmlUrl;
     target.repoCount = p.repoCount;
+    target.repos = p.repos;
+    target.reposUpdatedAt = p.repos !== undefined ? Date.now() : undefined;
     await setActiveId(context, p.login);
   }
   await writeAccounts(context, accounts);

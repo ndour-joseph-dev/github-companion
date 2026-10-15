@@ -7,6 +7,7 @@ import { getOrPromptToken, forgetRepoAccess } from '../accounts';
 import { handleError } from '../../core/errorHandler';
 import { getRemoteUrl } from '../../git/gitGuards';
 import { repoRefFromUrl } from '../../git/repoRef';
+import { clearLastRemoteCheck } from '../checkUpdates';
 import { stripCredentials } from '../../core/sanitize';
 import { validateRepoName } from './validateRepoName';
 
@@ -80,7 +81,10 @@ export async function runCreateRepo(context: vscode.ExtensionContext): Promise<v
 
         progress.report({ message: 'Configuration du remote…' });
         await git.addRemote('origin', cloneUrl);
-        forgetRepoAccess(); // le dépôt lié vient de changer
+        // Le dépôt lié vient de changer : verdict d'accès ET verdict de
+        // synchronisation de l'ancien dépôt sont désormais sans objet.
+        forgetRepoAccess();
+        clearLastRemoteCheck();
 
         vscode.window.showInformationMessage(
           `Dépôt créé : ${htmlUrl}. Utilise "Commit local" puis "Push" quand tu es prêt.`

@@ -160,6 +160,20 @@ textarea:focus {
 .status-row.ok .value {
   color: var(--vscode-testing-iconPassed, #2ea043);
 }
+/* Compte actif qui n'est PAS le propriétaire du dépôt : badge rouge, pour que
+   les deux noms ne se lisent pas comme une seule identité (couleurs prises des
+   thèmes VS Code : lisibles en clair comme en sombre). */
+.account-badge {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: var(--vscode-inputValidation-errorBackground, #5a1d1d);
+  border: 1px solid var(--vscode-inputValidation-errorBorder, #f14c4c);
+  /* Repli clair : hors thème VS Code (aperçu, capture), le fond reste sombre. */
+  color: var(--vscode-foreground, #ffffff);
+  font-weight: 600;
+  white-space: nowrap;
+}
 .status-link {
   color: var(--vscode-textLink-foreground, #3794ff);
   cursor: pointer;

@@ -26,8 +26,11 @@ a.ok(r.ok, 'un panneau chargé se repeint et demande l’état sans erreur — '
 a.ok(p.posted.some((m) => m.type === 'ready'), 'le panneau réclame l’état à l’extension');
 
 // 4. Message « settings » du host : comptes + bascule auto-sync.
+/** Dépôts du compte actif, tels que l'extension les transmet (profil résolu). */
+const repos = ['joseph-dev/demo', 'joseph-dev/outils', 'joseph-dev/fork-demo'];
 const accounts = [
-  { id: 'a1', login: 'joseph-dev', active: true, repoCount: 3, htmlUrl: 'https://github.com/joseph-dev' },
+  { id: 'a1', login: 'joseph-dev', active: true, repoCount: repos.length, repos,
+    htmlUrl: 'https://github.com/joseph-dev' },
   { id: 'a2', login: 'autre-compte', active: false }
 ];
 r = p.message({ type: 'settings', autoSync: true, accounts });
@@ -139,6 +142,11 @@ r = p.message({ type: 'settings', autoSync: false, accounts: [] });
 a.ok(r.ok, 'un message « settings » sans compte est traité — ' + fail(r));
 a.eq(p.element('account-current').textContent, 'Aucun compte', 'l’absence de compte est annoncée');
 a.eq(p.element('account-select').disabled, true, 'le sélecteur est désactivé sans compte');
+a.eq(p.element('repo-current').textContent, 'Aucun dépôt', 'sans compte, aucun dépôt n’est annoncé');
+a.eq(p.element('repo-select').disabled, true, 'la liste des dépôts est désactivée sans compte');
+r = p.fire('repo-select', 'onclick', {});
+a.ok(r.ok, 'cliquer sur la liste des dépôts désactivée ne plante pas — ' + fail(r));
+a.eq(p.element('repo-menu').hidden, true, 'aucune liste de dépôts ne s’ouvre sans compte');
 r = p.fire('account-select', 'onclick', {});
 a.ok(r.ok, 'cliquer sur un sélecteur désactivé ne plante pas — ' + fail(r));
 a.eq(p.element('account-menu').hidden, true, 'aucun menu ne s’ouvre sans compte');
@@ -147,6 +155,50 @@ a.ok(r.ok, '« Entrée » sur un sélecteur vide ne plante pas — ' + fail(r));
 a.eq(p.element('account-menu').hidden, true, 'le clavier n’ouvre pas de menu sans compte');
 r = p.message({ type: 'settings', autoSync: true, accounts });
 a.ok(r.ok, 'les comptes peuvent revenir après un état vide — ' + fail(r));
+
+// 4c. Liste des dépôts du compte actif : consultable, jamais sélectionnable.
+a.eq(p.element('repo-current').textContent, '3 dépôt(s)',
+  'le nombre de dépôts du compte actif est affiché dans la carte');
+a.eq(p.element('repo-select').disabled, false, 'la liste s’ouvre dès que les dépôts sont connus');
+a.eq(p.element('repo-menu').hidden, true, 'la liste des dépôts reste repliée au chargement');
+a.eq(p.element('repo-select').getAttribute('aria-expanded'), 'false',
+  'le bouton des dépôts démarre replié (état ARIA explicite)');
+const repoItems = p.element('repo-menu').children;
+a.eq(repoItems.length, 3, 'une entrée <li> par dépôt du compte actif');
+a.inc(p.element('repo-menu').innerHTML, 'joseph-dev/outils', 'les dépôts exacts sont listés');
+a.eq(repoItems[0].onclick, null, 'une entrée de dépôt n’a aucune action (lecture seule)');
+
+const repoPosts = p.posted.length;
+r = p.fire('repo-select', 'onclick', {});
+a.ok(r.ok, 'un clic sur le bouton des dépôts ouvre la liste sans erreur — ' + fail(r));
+a.eq(p.element('repo-menu').hidden, false, 'la liste des dépôts s’ouvre dans le panneau');
+a.eq(p.element('repo-select').getAttribute('aria-expanded'), 'true', 'le bouton se déclare déplié');
+r = p.fire('repo-select', 'onclick', {});
+a.ok(r.ok, 'un second clic referme la liste sans erreur — ' + fail(r));
+a.eq(p.element('repo-menu').hidden, true, 'un second clic referme la liste des dépôts');
+p.fire('repo-select', 'onkeydown', p.key('Enter'));
+a.eq(p.element('repo-menu').hidden, false, '« Entrée » ouvre la liste (accessible au clavier)');
+p.fire('repo-select', 'onkeydown', p.key('Escape'));
+a.eq(p.element('repo-menu').hidden, true, '« Échap » referme la liste des dépôts');
+p.fire('repo-select', 'onclick', {});
+p.click({ tagName: 'SPAN' });
+a.eq(p.element('repo-menu').hidden, true, 'un clic ailleurs referme la liste des dépôts');
+a.eq(p.posted.length, repoPosts, 'consulter la liste des dépôts n’envoie aucun message');
+
+// Profil résolu hors ligne (liste pas encore reçue) : le compteur reste affiché,
+// mais la liste est annoncée indisponible au lieu de sembler vide.
+r = p.message({
+  type: 'settings',
+  autoSync: true,
+  accounts: [{ id: 'a1', login: 'joseph-dev', active: true, repoCount: 3 }]
+});
+a.ok(r.ok, 'un compte sans liste de dépôts est traité — ' + fail(r));
+a.eq(p.element('repo-current').textContent, '3 dépôt(s) — liste indisponible',
+  'sans liste reçue, le compteur est affiché mais la liste est dite indisponible');
+a.eq(p.element('repo-select').disabled, true, 'la liste reste fermée tant qu’elle est inconnue');
+r = p.message({ type: 'settings', autoSync: true, accounts });
+a.ok(r.ok, 'la liste des dépôts revient avec le profil complet — ' + fail(r));
+a.eq(p.element('repo-current').textContent, '3 dépôt(s)', 'la liste connue remplace le message');
 
 // 5. Message « status » du host : zone d'état, badge « à récupérer », coche.
 r = p.message({
@@ -168,7 +220,10 @@ r = p.message({
       role: 'owner',
       webUrl: 'https://github.com/joseph-dev/demo'
     },
-    remoteCommits: [{ author: 'joseph-dev', when: 'hier', subject: 'fix: panneau' }]
+    remoteCommits: [{ author: 'joseph-dev', when: 'hier', subject: 'fix: panneau' }],
+    lastCommit: 'ajout d’une balise h4',
+    lastAuthor: 'joseph-dev',
+    lastCommitAt: Date.parse('2026-10-14T16:41:00Z')
   }
 });
 a.ok(r.ok, 'un message « status » du host est traité — ' + fail(r));
@@ -180,6 +235,18 @@ a.eq(p.element('pull-badge').textContent, '2', 'le badge affiche le nombre de co
 a.ok(!p.element('pull-badge').classList.contains('hidden'), 'le badge est visible quand il reste des commits');
 a.ok(p.element('pull-ok').classList.contains('hidden'), 'la coche reste masquée tant qu’il reste des commits');
 a.ok(p.state.status && p.state.status.data.branch === 'main', 'l’état du panneau mémorise le dernier statut');
+// Correspondance dépôt ↔ compte actif : le dossier ouvert appartient au compte.
+const corr = /Correspondance<\/span><span class="value">([^<]*)</.exec(p.element('status').innerHTML);
+a.ok(corr && corr[1].indexOf('oui') === 0,
+  'la correspondance dépôt ↔ compte actif est affichée — vu : ' + (corr && corr[1]));
+// Dernier commit : date + heure d'un côté, message de l'autre.
+a.inc(p.element('status').innerHTML, 'Dernier commit', 'la date du dernier commit a son libellé');
+a.ok(/\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/.test(p.element('status').innerHTML),
+  'la date ET l’heure du dernier commit sont affichées');
+a.inc(p.element('status').innerHTML, 'Message', 'le message du dernier commit a son libellé');
+a.inc(p.element('status').innerHTML, 'balise h4', 'le message du dernier commit est affiché');
+a.inc(p.element('repo-menu').innerHTML, 'dossier ouvert',
+  'le dépôt du dossier ouvert est signalé dans la liste consultable');
 
 // 5b. Lien reconstruit dans la zone d'état : un clic demande l'ouverture.
 const link = p.element('status').querySelectorAll('.status-link')[0];
@@ -193,6 +260,37 @@ try {
 a.ok(!linkError, 'le clic sur le lien ne plante pas — ' + (linkError && linkError.message));
 a.ok(p.posted.some((m) => m.type === 'openExternal' && m.url === 'https://github.com/joseph-dev/demo'),
   'le clic sur le lien demande l’ouverture dans le navigateur');
+
+// 5c. Dépôt étranger au compte actif : la correspondance dit « non » (le doute
+// doit être levé avant tout push vers un dépôt qui n'est pas le sien).
+r = p.message({
+  type: 'status',
+  data: {
+    branch: 'main',
+    hasRemote: true,
+    upstream: 'origin/main',
+    checkedAt: Date.now(),
+    modified: 0,
+    ahead: 0,
+    staged: 0,
+    conflicts: 0,
+    behind: 0,
+    remoteUrl: 'https://github.com/octocat/demo',
+    repo: {
+      fullName: 'octocat/demo',
+      owner: 'octocat',
+      role: 'none',
+      webUrl: 'https://github.com/octocat/demo'
+    }
+  }
+});
+a.ok(r.ok, 'un dépôt étranger au compte actif est affiché sans erreur — ' + fail(r));
+const corr2 = /Correspondance<\/span><span class="value">([^<]*)</.exec(p.element('status').innerHTML);
+a.ok(corr2 && corr2[1].indexOf('non') === 0,
+  'un dépôt qui n’est pas celui du compte est annoncé non correspondant — vu : ' + (corr2 && corr2[1]));
+a.inc(p.element('status').innerHTML, 'danger', 'un accès refusé est mis en évidence');
+a.ok(p.element('repo-menu').innerHTML.indexOf('dossier ouvert') === -1,
+  'plus aucun dépôt de la liste ne correspond au dossier ouvert');
 
 // 6. Message « clearCommitMessage » : le champ est vidé.
 p.element('commit-message').value = 'wip';
@@ -267,6 +365,13 @@ r = p.fire('btn-pull', 'onclick', {});
 a.ok(r.ok && p.posted.some((m) => m.type === 'pull'), '« Mettre à jour » déclenche « pull »');
 r = p.fire('btn-check', 'onclick', {});
 a.ok(r.ok && p.posted.some((m) => m.type === 'checkUpdates'), '« Vérifier » déclenche « checkUpdates »');
+// Rafraîchir : la liste des dépôts est distante, elle ne peut pas être devinée
+// depuis le dossier local (trois dépôts supprimés restaient affichés).
+const beforeRefresh = p.posted.length;
+r = p.fire('btn-refresh', 'onclick', {});
+a.ok(r.ok, 'le clic sur « Rafraîchir » ne plante pas — ' + fail(r));
+a.eq(p.posted.slice(beforeRefresh).map((m) => m.type), ['refresh'],
+  '« Rafraîchir » demande à l’extension de réinterroger GitHub');
 p.element('commit-message').value = 'feat: panneau';
 r = p.fire('btn-commit', 'onclick', {});
 a.ok(r.ok && p.posted.some((m) => m.type === 'commit' && m.message === 'feat: panneau'),

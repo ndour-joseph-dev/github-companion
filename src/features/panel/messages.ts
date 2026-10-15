@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { redact } from '../../core/sanitize';
 import { updateStatusBar } from '../statusBar';
-import { handleAccountAction, forgetRepoAccess } from '../accounts';
+import { handleAccountAction, forgetRepoAccess, runRefresh } from '../accounts';
 import { runInitLocalRepo } from '../initLocalRepo';
 import { runCreateRepo } from '../createRepo';
 import { runCommit } from '../commit';
@@ -38,6 +38,13 @@ export async function handlePanelMessage(msg: any, host: PanelHost): Promise<voi
       case 'push': await runPush(host.context); break;
       case 'pull': await runPull(host.context); break;
       case 'checkUpdates': await runCheckUpdates(host.context); break;
+      case 'refresh':
+        // La liste des dépôts est distante : un dépôt a pu être créé ou supprimé
+        // sur GitHub sans que le dossier local en sache quoi que ce soit. On
+        // repose la question, puis on renvoie l'état des comptes au panneau.
+        await runRefresh(host.context);
+        await host.sendSettings();
+        break;
       case 'account':
         await handleAccountAction(host.context, msg.action, msg.id);
         await host.sendSettings();

@@ -1,5 +1,6 @@
 import { SimpleGit } from 'simple-git';
 import { fetchWithAuth } from './gitAuth';
+import { localHead } from './remoteHead';
 
 export interface RemoteCommit {
   author: string;
@@ -14,6 +15,13 @@ export interface RemoteCheckResult {
   hasTracking: boolean;
   upstream?: string;
   checkedAt: number; // Date.now()
+  /**
+   * SHA de HEAD au moment de la vérification. Un résultat n'est valable que
+   * pour ce commit : dès qu'un commit local est créé, ahead/behind qu'il porte
+   * décrivent une situation révolue (l'affichage s'appuie dessus pour savoir ce
+   * qu'il peut encore affirmer).
+   */
+  head?: string;
 }
 
 /** true si la ref existe localement (branche distante déjà récupérée).
@@ -43,6 +51,7 @@ export async function fetchAndCompare(
   await fetchWithAuth(git, token);
 
   const status = await git.status();
+  const head = await localHead(git);
   const branch = status.current;
   let upstream = status.tracking || undefined;
   let hasTracking = !!upstream;
@@ -59,7 +68,7 @@ export async function fetchAndCompare(
     hasTracking = false;
   }
 
-  if (!upstream) return emptyResult();
+  if (!upstream) return { ...emptyResult(), head };
 
   const behindStr = (await git.raw(['rev-list', '--count', `HEAD..${upstream}`])).trim();
   const aheadStr = (await git.raw(['rev-list', '--count', `${upstream}..HEAD`])).trim();
@@ -92,6 +101,7 @@ export async function fetchAndCompare(
     commits,
     hasTracking,
     upstream,
-    checkedAt: Date.now()
+    checkedAt: Date.now(),
+    head
   };
 }

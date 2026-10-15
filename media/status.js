@@ -16,6 +16,14 @@ function ago(ts) {
   if (m < 60) return 'il y a ' + m + ' min';
   return 'il y a ' + Math.round(m / 60) + ' h';
 }
+/** Date et heure locales d'un horodatage : « 14/10/2026 16:41 » ('' si absent). */
+function stamp(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const p = (n) => String(n).padStart(2, '0');
+  return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() +
+    ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
 
 /** Badge animé (nb de commits distants) ou coche de validation si tout est synchro. */
 function updateSyncIndicator(behind, synced) {
@@ -93,8 +101,22 @@ function renderStatus(msg) {
     lines.push(row('Distant', 'Aucune branche — pousse au moins une fois', 'warn'));
   }
   if (s.lastCommit) {
-    const who = s.lastAuthor ? ' (' + esc(s.lastAuthor) + ')' : '';
-    lines.push(row('Dernier', esc(s.lastCommit) + who));
+    // Date + heure d'un côté, message de l'autre : le message d'un commit est
+    // souvent long, la date seule se lit d'un coup d'œil.
+    // « (local) » dès qu'un remote existe : ces deux lignes décrivent le dossier
+    // ouvert, pas le dépôt cloud (qui a ses propres commits, plus bas). Sans
+    // cette précision, un dépôt GitHub recréé ou renommé laissait croire que
+    // l'affichage était figé.
+    const what = s.hasRemote ? 'Dernier commit (local)' : 'Dernier commit';
+    if (s.lastCommitAt) {
+      const who = s.lastAuthor ? ' (' + esc(s.lastAuthor) + ')' : '';
+      lines.push(row(what, stamp(s.lastCommitAt) + who));
+    }
+    lines.push(row('Message', esc(s.lastCommit)));
+  } else {
+    // Dépôt initialisé mais aucun commit : le dire, plutôt que de laisser la
+    // zone muette (même exigence que la liste des dépôts).
+    lines.push(row('Dernier commit', 'Aucun commit en local', 'warn'));
   }
   if (s.checkedAt) lines.push(row('Vérifié', ago(s.checkedAt)));
   if (s.opLabel) lines.push(row('Opération', esc(s.opLabel) + ' — à terminer ou annuler', 'danger'));

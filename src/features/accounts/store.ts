@@ -11,6 +11,16 @@ export interface Account {
   login: string;      // nom d'utilisateur GitHub ('' s'il n'a pas pu être résolu)
   htmlUrl?: string;   // page du profil GitHub
   repoCount?: number; // nombre de dépôts (undefined = encore inconnu)
+  repos?: string[];   // noms des dépôts détenus (undefined = liste inconnue)
+  /**
+   * Horodatage de la liste de dépôts ci-dessus. Cette liste est une PHOTO de
+   * GitHub, et elle est conservée dans le coffre : sans sa date, l'extension ne
+   * peut pas savoir qu'un dépôt a été créé ou supprimé depuis, et afficherait
+   * indéfiniment les dépôts d'hier (trois dépôts supprimés sur GitHub restaient
+   * listés après fermeture puis réouverture de l'éditeur).
+   * Absent = photo prise avant l'existence de cette date : à vérifier une fois.
+   */
+  reposUpdatedAt?: number;
   token: string;
 }
 
@@ -21,6 +31,7 @@ export interface AccountInfo {
   active: boolean;
   htmlUrl?: string;
   repoCount?: number;
+  repos?: string[];
 }
 
 /** Profil GitHub associé au token (undefined si hors ligne ou token invalide). */

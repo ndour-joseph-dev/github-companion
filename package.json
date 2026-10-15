@@ -2,7 +2,7 @@
   "name": "github-companion",
   "displayName": "GitHub Companion",
   "description": "Gère ton projet GitHub (création de repo, commit, push) via des boutons groupés — sans automatisation cachée, avec transparence totale sur les commandes exécutées.",
-  "version": "0.0.11",
+  "version": "0.0.14",
   "publisher": "joseph-dev",
   "icon": "resources/icon.png",
   "engines": {
@@ -46,6 +46,11 @@
       {
         "command": "githubCompanion.checkUpdates",
         "title": "GitHub Companion: Vérifier les mises à jour"
+      },
+      {
+        "command": "githubCompanion.refresh",
+        "title": "GitHub Companion: Rafraîchir les dépôts du compte",
+        "icon": "$(refresh)"
       },
       {
         "command": "githubCompanion.setToken",
@@ -116,7 +121,8 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "bash test/run-all.sh",
-    "test:coverage": "GC_COVERAGE=1 bash test/run-all.sh"
+    "test:coverage": "GC_COVERAGE=1 bash test/run-all.sh",
+    "package": "vsce package --allow-missing-repository"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

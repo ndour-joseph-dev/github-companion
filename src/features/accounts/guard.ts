@@ -35,20 +35,28 @@ export async function guardAccountSwitch(
   if (access.role === 'owner' || access.role === 'admin') return targetId;
 
   const owner = repo.owner;
+  // Le propriétaire vient de l'URL du remote du dossier ouvert : c'est un
+  // LOGIN GitHub réel (change d'un utilisateur à l'autre, d'un dépôt à
+  // l'autre), jamais un nom figé dans l'extension. On le dit, pour que personne
+  // ne prenne ce nom pour sa propre identité ou pour celle du compte choisi.
+  const by = `Propriétaire d'après l'URL du remote : « ${owner} ».`;
   if (access.role === 'unknown') {
     const go = await ask(
       `Impossible de vérifier l'accès de « ${name} » au dépôt ${repo.fullName} ` +
-        `(hors ligne ou token invalide). Propriétaire d'après l'URL : « ${owner} ».`
+        `(hors ligne ou token invalide). ${by}`
     );
     return go ? targetId : undefined;
   }
 
   const problem =
     access.role === 'none'
-      ? `« ${name} » n'a aucun accès au dépôt ${repo.fullName}.`
+      ? // GitHub répond 404 pour un dépôt supprimé comme pour un accès refusé :
+        // affirmer un refus sec serait mentir sur l'un des deux cas.
+        `« ${name} » n'a aucun accès à ${repo.fullName} — accès refusé, ou ` +
+        `dépôt supprimé sur GitHub (même réponse). ${by}`
       : access.canPush === false
-        ? `« ${name} » n'a qu'un accès en LECTURE SEULE à ${repo.fullName}.`
-        : `« ${name} » n'est pas propriétaire de ${repo.fullName} (accès collaborateur).`;
+        ? `« ${name} » n'a qu'un accès en LECTURE SEULE à ${repo.fullName}. ${by}`
+        : `« ${name} » n'est pas propriétaire de ${repo.fullName} (accès collaborateur). ${by}`;
 
   const known = (await listAccounts(context))
     .find((a) => a.login && a.login.toLowerCase() === owner.toLowerCase());
@@ -59,7 +67,7 @@ export async function guardAccountSwitch(
   const buttons = [useOwner, keep, 'Annuler'].filter((b): b is string => !!b);
 
   const choice = await vscode.window.showWarningMessage(
-    `${problem} Propriétaire : « ${owner} ». Les commits partiront vers ce dépôt : ` +
+    `${problem} Les commits partiront vers ce dépôt : ` +
       'vérifie que le compte choisi est bien celui que tu veux utiliser.',
     { modal: true },
     ...buttons

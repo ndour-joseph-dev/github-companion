@@ -6,17 +6,25 @@ import { handleError } from '../../core/errorHandler';
 import { getRemoteUrl } from '../../git/gitGuards';
 import { fetchAndCompare, RemoteCheckResult } from '../../git/remoteCheck';
 import { withGitLock } from '../../git/gitLock';
+import {
+  clearRemoteCheck,
+  getRemoteCheck,
+  rememberRemoteCheck,
+  RemoteCheckScope
+} from './store';
 
-/** Dernier résultat de vérification (mémoire process). */
-let lastResult: RemoteCheckResult | null = null;
-
-export function getLastRemoteCheck(): RemoteCheckResult | null {
-  return lastResult;
+/**
+ * Dernier résultat de vérification, s'il décrit ENCORE le dépôt et le commit
+ * demandés (voir store.ts) : un verdict d'un autre dépôt, antérieur à un commit
+ * local, ou trop vieux, est ignoré plutôt qu'affiché comme un fait.
+ */
+export function getLastRemoteCheck(scope: RemoteCheckScope = {}): RemoteCheckResult | null {
+  return getRemoteCheck(scope);
 }
 
-/** Invalide le cache après une action qui change l'état (pull, push…). */
+/** Invalide le cache après une action qui change l'état (pull, push, remote…). */
 export function clearLastRemoteCheck(): void {
-  lastResult = null;
+  clearRemoteCheck();
 }
 
 /** Vérification distante (fetch) : sous verrou, comme toute opération Git. */
@@ -65,7 +73,8 @@ async function checkUpdatesImpl(
       async () => fetchAndCompare(git.raw(), token)
     );
 
-    lastResult = result;
+    // Rattaché au dépôt interrogé : un verdict d'un autre dépôt ne ressortira pas.
+    rememberRemoteCheck(result, remoteUrl);
 
     if (!result.upstream) {
       vscode.window.showWarningMessage(

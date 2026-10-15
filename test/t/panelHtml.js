@@ -20,9 +20,27 @@ a.inc(top, 'id="btn-token"', 'le bouton token est dans la barre de comptes');
 a.inc(top, 'Ajouter un token', 'le bouton token est libellé « Ajouter un token »');
 a.inc(top, 'id="btn-del-account"', 'il est voisin du bouton « Retirer ce compte »');
 a.inc(top, 'id="btn-add-account"', 'l’ajout d’un compte supplémentaire reste disponible');
-a.eq((top.match(/class="secondary"/g) || []).length, 3, 'trois actions groupées : compte, token, retrait');
-a.ok(top.indexOf('id="btn-token"') < top.indexOf('id="btn-del-account"'),
-  'le bouton token précède le bouton de suppression');
+a.eq((top.match(/class="secondary"/g) || []).length, 4,
+  'quatre actions groupées : compte, token, rafraîchissement, retrait');
+a.ok(top.indexOf('id="btn-token"') < top.indexOf('id="btn-refresh"') &&
+  top.indexOf('id="btn-refresh"') < top.indexOf('id="btn-del-account"'),
+  'l’ordre des actions place le rafraîchissement avant le retrait (destructif en dernier)');
+a.inc(top, 'Rafraîchir', 'le bouton de rafraîchissement des dépôts est libellé');
+a.inc(accountsJs, "getElementById('btn-refresh').onclick = () => post('refresh')",
+  'le bouton demande à l’extension de réinterroger GitHub');
+// Compte actif ≠ propriétaire du dépôt : badge rouge, pas une parenthèse qu'on
+// ne remarque pas (les deux noms se lisaient comme une seule identité).
+const css = fs.readFileSync(path.join(media, 'panel.css'), 'utf8');
+const repoJs = read('repo.js');
+a.inc(repoJs, 'activeBadge', 'le nom du compte actif est badgé dans l’état du dépôt');
+a.inc(repoJs, 'class="account-badge"', 'le badge est posé autour du login du compte actif');
+a.inc(css, '.account-badge', 'le badge du compte actif a son style');
+a.inc(css, 'background: var(--vscode-inputValidation-errorBackground',
+  'le badge est rouge, avec les couleurs du thème VS Code (lisible en clair et en sombre)');
+a.ok(html.indexOf('account-badge') === -1,
+  'le badge est construit au rendu : rien n’est figé dans le HTML');
+a.inc(fs.readFileSync(path.join(ROOT, 'src/features/panel/messages.ts'), 'utf8'),
+  "case 'refresh'", 'l’extension traite le message « refresh » du panneau');
 a.ok(html.slice(accEnd).indexOf('btn-token') === -1, 'le bouton token n’est plus en bas du panneau');
 
 // Sélecteur de compte maison : un <select> natif ouvre une fenêtre système que le
@@ -44,6 +62,22 @@ a.inc(accountsJs, "setAttribute('aria-expanded'", 'l’état ouvert/fermé est a
 // Conteneur parent + titre (la mise en page est vérifiée par panelLayout).
 a.inc(top, 'class="accounts-actions"', 'un conteneur parent regroupe les trois actions');
 a.inc(top, '<div class="group-title">Gestion des comptes</div>', 'un titre coiffe la rangée');
+
+// Liste des dépôts du compte actif : même sélecteur maison que les comptes, dans
+// la carte d'état, et strictement consultable (aucune sélection possible).
+a.ok(html.indexOf('id="repo-select"') > accEnd,
+  'la liste des dépôts du compte actif vit dans la carte d’état');
+a.inc(html, 'id="repo-current"', 'le nombre de dépôts a son propre nœud');
+a.inc(html, 'id="repo-menu"', 'la liste des dépôts est une liste du DOM (pas de fenêtre système)');
+a.inc(html, 'class="dropdown repo-list"', 'elle réutilise le sélecteur maison des comptes');
+a.inc(html, 'aria-controls="repo-menu"', 'le bouton déclare la liste qu’il contrôle');
+a.inc(html, 'aria-haspopup="listbox"', 'le bouton annonce qu’il ouvre une liste');
+a.ok(html.indexOf('id="repo-option') === -1,
+  'les entrées de dépôts sont rendues par le script (liste reçue de l’extension)');
+a.inc(accountsJs, "getElementById('repo-select')", 'la liste des dépôts est câblée par accounts.js');
+a.inc(accountsJs, "' · dossier ouvert'", 'le dépôt du dossier ouvert est signalé dans la liste');
+a.ok(accountsJs.indexOf('post(\'repo') === -1,
+  'aucun message n’est envoyé par la liste des dépôts (lecture seule)');
 
 a.ok(html.indexOf('action-last') === -1, 'aucun bloc résiduel en fin de panneau');
 

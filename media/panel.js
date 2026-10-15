@@ -28,6 +28,9 @@ let answered = false;
 function showStatus(msg) {
   renderStatus(msg);
   if (msg.state !== 'loading' && msg.state !== 'no-answer') remember({ status: msg });
+  // La liste des dépôts signale celui du dossier ouvert : elle suit l'état reçu
+  // (définie dans accounts.js, chargé après ce script).
+  if (typeof renderRepoList === 'function') renderRepoList();
 }
 
 /** Sans réponse de l'extension, la zone d'état le dit au lieu de rester vide. */

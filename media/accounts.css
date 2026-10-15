@@ -126,6 +126,9 @@
   color: var(--vscode-errorForeground, #f14c4c);
   border-color: currentColor;
 }
+.repo-list {
+  margin: 6px 0 2px;
+}
 /* État du compte actif, affiché en tête de la zone « État ». */
 #account-status {
   display: flex;
