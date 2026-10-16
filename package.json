@@ -9,6 +9,13 @@
     "name": "Joseph",
     "email": "ndour.joseph.dev@gmail.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ndour-joseph-dev/github-companion.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ndour-joseph-dev/github-companion/issues"
+  },
   "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.85.0"
@@ -127,7 +134,7 @@
     "watch": "tsc -watch -p ./",
     "test": "bash test/run-all.sh",
     "test:coverage": "GC_COVERAGE=1 bash test/run-all.sh",
-    "package": "vsce package --allow-missing-repository"
+    "package": "vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

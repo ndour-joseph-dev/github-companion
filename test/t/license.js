@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 const { ROOT } = require('../harness/load');
 const a = require('../harness/assert');
 
@@ -58,5 +59,33 @@ a.ok(!/license/i.test(ignore), 'le .vscodeignore ne retire pas la licence du paq
 const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
 a.inc(readme, '## Licence', 'le README annonce la licence');
 a.inc(readme, 'MIT', 'le README nomme la licence');
+
+// `vsce` refuse de packager dès qu'un lien relatif existe dans le README sans
+// champ `repository` : l'URL de la fiche est alors indétectable et il ne peut
+// pas vérifier la cible. C'est arrivé (le lien vers LICENSE), donc c'est
+// verrouillé ici : le dépôt est déclaré, il désigne bien celui du dossier, et
+// chaque cible de lien existe.
+const repo = (typeof pkg.repository === 'string' ? pkg.repository : (pkg.repository && pkg.repository.url) || '')
+  .replace(/\/$/, '');
+a.ok(/^https:\/\/github\.com\/[^/]+\/[^/]+(\.git)?$/.test(repo),
+  `le dépôt source est déclaré et bien formé (${repo || 'absent'})`);
+
+// Un fork peut publier sous un autre nom : dans ce cas la comparaison est
+// impossible, mais un `origin` présent doit désigner le même dépôt — deux
+// valeurs divergentes enverraient les lecteurs de la fiche vers un autre projet.
+let origin = '';
+try {
+  origin = execFileSync('git', ['remote', 'get-url', 'origin'], { cwd: ROOT, encoding: 'utf8' }).trim();
+} catch {
+  origin = ''; // dépôt sans remote (archive, clone détaché) : rien à comparer
+}
+const norm = (u) => u.replace(/\.git$/, '').replace(/\/$/, '');
+if (origin) a.eq(norm(repo), norm(origin), 'le dépôt déclaré est celui du remote « origin »');
+
+const relative = [...readme.matchAll(/\]\((?!https?:|mailto:|#)([^)\s]+)\)/g)].map((m) => m[1]);
+for (const target of relative) {
+  a.ok(fs.existsSync(path.join(ROOT, target)),
+    `la cible du lien relatif du README « ${target} » existe`);
+}
 
 a.done('license');

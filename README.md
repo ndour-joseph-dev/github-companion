@@ -183,8 +183,8 @@ vérification d'après-push, et l'absence totale de commande destructive.
 - **vente** de copies : autorisée.
 
 Une seule obligation : **conserver la notice de copyright et la licence**
-(le fichier `LICENSE`, livré avec l'extension) dans les copies ou parties
-substantielles du logiciel — le nom de l'auteur ne peut donc pas être retiré ni
-remplacé, et ce travail ne peut pas être présenté comme celui d'un autre.
+([`LICENSE`](LICENSE)) dans les copies ou parties substantielles du logiciel —
+le nom de l'auteur ne peut donc pas être retiré ni remplacé, et ce travail ne
+peut pas être présenté comme celui d'un autre.
 
 Le logiciel est fourni « en l'état », sans garantie d'aucune sorte.
