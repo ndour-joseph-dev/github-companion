@@ -4,6 +4,12 @@ Extension VS Code qui **groupe** les commandes Git/GitHub derrière des boutons.
 Chaque action part d'un clic explicite — sauf si tu actives volontairement le
 toggle **Sync auto**.
 
+<img width="1920" height="1080" alt="Capture d’écran du 2026-10-16 15-37-40" src="https://github.com/user-attachments/assets/99080493-077d-438e-95fe-6faeedce745a" />
+
+<img width="1920" height="1080" alt="Capture d’écran du 2026-10-16 15-37-53" src="https://github.com/user-attachments/assets/4df13e46-9c67-4810-a476-32cd8f9cec4a" />
+
+
+
 ## Ce que ça fait
 
 - **1. Initialiser un repo local** : `git init` (branche par défaut configurable).
