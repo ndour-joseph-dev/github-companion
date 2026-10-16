@@ -4,6 +4,33 @@ Toutes les évolutions notables de **GitHub Companion**. Le format suit
 [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les versions
 respectent le [versionnage sémantique](https://semver.org/lang/fr/).
 
+## [0.0.15] - 2026-10-16
+
+Première version **publiable** : les termes sont explicites, l'auteur est
+identifiable, et l'extension peut être installée depuis un `.vsix` ou publiée.
+
+### Ajouté
+
+- **Licence MIT** (`LICENSE`) : l'extension est **gratuite, sans
+  contrepartie** — usage personnel, usage commercial, modification,
+  redistribution, intégration dans un autre produit (y compris vendu) et
+  revente de copies. La **seule** obligation est de **conserver la notice de
+  copyright et la licence** dans les copies ou parties substantielles du
+  logiciel : le nom de l'auteur ne peut donc pas être retiré ni remplacé, et ce
+  travail ne peut pas être présenté comme celui d'un autre. Fournie « en
+  l'état », sans garantie d'aucune sorte.
+- `package.json` déclare `"license": "MIT"` et l'auteur du projet : la fiche de
+  l'extension et le fichier `LICENSE` ne peuvent plus diverger.
+- `README.md` : section **Licence** (ce qui est autorisé, et la seule
+  obligation à respecter).
+
+### Interne
+
+- Nouvelle suite `test/t/license.js` : licence absente, licence qui ne serait
+  plus la MIT, clause d'attribution supprimée ou restriction « non commerciale »
+  ajoutée, titulaire différent de l'auteur déclaré, licence retirée du paquet
+  par `.vscodeignore` — chacun de ces cas fait échouer la suite.
+
 ## [0.0.14] - 2026-10-15
 
 Un dépôt GitHub supprimé **puis remplacé** ne laisse plus ses traces : l'état

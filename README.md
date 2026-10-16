@@ -173,3 +173,18 @@ vérification d'après-push, et l'absence totale de commande destructive.
 | `githubCompanion.defaultBranch` | `main` | Branche par défaut |
 | `githubCompanion.defaultVisibility` | `private` | Visibilité des nouveaux repos |
 | `githubCompanion.autoSync` | `false` | Commit → push automatique |
+
+## Licence
+
+**MIT** — 100 % gratuit, sans contrepartie :
+
+- usage **personnel** ou **commercial**, modification, redistribution ;
+- **intégration dans un autre produit** (y compris vendu) : autorisée ;
+- **vente** de copies : autorisée.
+
+Une seule obligation : **conserver la notice de copyright et la licence**
+(le fichier `LICENSE`, livré avec l'extension) dans les copies ou parties
+substantielles du logiciel — le nom de l'auteur ne peut donc pas être retiré ni
+remplacé, et ce travail ne peut pas être présenté comme celui d'un autre.
+
+Le logiciel est fourni « en l'état », sans garantie d'aucune sorte.

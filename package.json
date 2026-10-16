@@ -2,8 +2,13 @@
   "name": "github-companion",
   "displayName": "GitHub Companion",
   "description": "Gère ton projet GitHub (création de repo, commit, push) via des boutons groupés — sans automatisation cachée, avec transparence totale sur les commandes exécutées.",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "publisher": "joseph-dev",
+  "license": "MIT",
+  "author": {
+    "name": "Joseph",
+    "email": "ndour.joseph.dev@gmail.com"
+  },
   "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.85.0"
