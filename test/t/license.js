@@ -79,7 +79,14 @@ try {
 } catch {
   origin = ''; // dépôt sans remote (archive, clone détaché) : rien à comparer
 }
-const norm = (u) => u.replace(/\.git$/, '').replace(/\/$/, '');
+// HTTPS et SSH désignent le même dépôt : les deux formes sont ramenées à une
+// seule avant comparaison, sinon un simple changement de protocole ferait
+// échouer le test sans qu'aucun lien ne soit cassé.
+const norm = (u) => String(u)
+  .replace(/^git@([^:]+):/, 'https://$1/')
+  .replace(/^ssh:\/\/git@([^/]+)\//, 'https://$1/')
+  .replace(/\.git$/, '')
+  .replace(/\/$/, '');
 if (origin) a.eq(norm(repo), norm(origin), 'le dépôt déclaré est celui du remote « origin »');
 
 const relative = [...readme.matchAll(/\]\((?!https?:|mailto:|#)([^)\s]+)\)/g)].map((m) => m[1]);
