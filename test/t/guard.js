@@ -62,7 +62,8 @@ function conflict(dir) {
 
   // 5. modifications locales + pull : avertissement, l’utilisateur décide
   G.write(dir, 'a.txt', 'modifié\n');
-  vscode.__reply('warning', 'Annuler');
+  // Pas de réponse programmée = fermeture du dialogue (annulation) : le pull
+  // s'arrête. Le bouton « Annuler » est celui que VS Code ajoute au modal.
   a.eq((await preflight(dir, git, 'pull')).ok, false, 'pull annulé par l’utilisateur');
   a.inc(vscode.__state.messages.at(-1).text, 'non commité', 'raison expliquée');
   vscode.__reply('warning', 'Continuer');

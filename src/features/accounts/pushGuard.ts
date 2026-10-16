@@ -25,8 +25,9 @@ export async function confirmPushAllowed(
       `(propriétaire : « ${repo.owner} »). Le push va échouer : ` +
       'choisis plutôt le compte correspondant au dépôt.',
     { modal: true },
-    'Pousser quand même',
-    'Annuler'
+    // Un seul item : le bouton d'annulation est ajouté par VS Code pour tout
+    // dialogue modal (le déclarer ici en afficherait deux).
+    'Pousser quand même'
   );
-  return choice === 'Pousser quand même';
+  return choice === 'Pousser quand même'; // fermer le dialogue refuse le push
 }

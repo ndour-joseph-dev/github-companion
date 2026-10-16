@@ -59,8 +59,8 @@ export async function preflight(root: string, git: SimpleGit, op: Op): Promise<P
         "changements s'ils gênent la récupération : tes fichiers ne seront pas perdus. " +
         'Commiter d’abord est plus confortable.',
       { modal: true },
-      'Continuer',
-      'Annuler'
+      // Le bouton d'annulation est fourni par VS Code (dialogue modal).
+      'Continuer'
     );
     if (choice !== 'Continuer') return { ok: false, state };
   }

@@ -44,6 +44,15 @@ cloud, et le compte actif ne se confond plus avec le propriétaire affiché.
 - **Avertissement de changement de compte** : la provenance du nom est explicitée
   (« propriétaire d'après l'URL du remote ») et un 404 est annoncé « accès refusé,
   **ou** dépôt supprimé » — GitHub répond la même chose dans les deux cas.
+- **Deux boutons « Annuler » dans les dialogues** : tout dialogue modal reçoit
+  **déjà** son bouton de fermeture de VS Code (« Annuler »/« Cancel », traduit) —
+  le garde-fou de changement de compte en déclarait un en plus, et l'écran
+  montrait donc « Annuler », « Changer quand même », « Annuler », « Utiliser… ».
+  L'item en trop est retiré **partout** : bascule de compte, confirmation avant
+  push, « Pousser quand même » malgré des commits distants non récupérés, commit
+  qui publierait des identifiants, et pull avec des modifications locales. Seuls
+  les choix réels restent affichés ; fermer le dialogue (ou Échap) est traité
+  comme un **refus** — compte actif inchangé, aucune action lancée.
 
 ### Modifié
 
@@ -61,9 +70,12 @@ cloud, et le compte actif ne se confond plus avec le propriétaire affiché.
   sans `vscode`, donc testable) + `head` mémorisé avec le résultat distant.
 - Nouvelles suites `remoteCache` (péremption, rattachement au dépôt, au commit,
   preuve de push), `accountMessages` (messages du garde-fou de compte, et
-  **aucun login de compte en dur** dans `src/` et `media/`) et `statusLayout`
+  **aucun login de compte en dur** dans `src/` et `media/`), `statusLayout`
   (chaque information de la zone d'état est dans son `<div>`, jamais de texte nu,
-  pour les états complets, dépôt vide, chargement et erreurs).
+  pour les états complets, dépôt vide, chargement et erreurs) et `modalButtons`
+  (aucun dialogue modal du code publié ne déclare d'item « Annuler » — VS Code
+  l'ajoute lui-même, le redéclarer l'affichait deux fois ; et fermer un dialogue
+  annule bien la bascule de compte comme le push).
 
 ## [0.0.13] - 2026-10-15
 

@@ -3,15 +3,20 @@ import { analyzeRepoMatch } from './repoMatch';
 import { listAccounts } from './core';
 import { label } from './store';
 
-/** Confirmation modale simple (Continuer / Annuler). */
+/**
+ * Confirmation modale simple (Continuer / fermeture).
+ *
+ * Le bouton d'annulation n'est JAMAIS déclaré ici : pour un dialogue modal, VS
+ * Code ajoute lui-même le bouton de fermeture (« Annuler »/« Cancel », traduit).
+ * Le déclarer en plus afficherait deux boutons identiques.
+ */
 async function ask(question: string): Promise<boolean> {
   const choice = await vscode.window.showWarningMessage(
     `${question} Continuer la bascule de compte ?`,
     { modal: true },
-    'Continuer',
-    'Annuler'
+    'Continuer'
   );
-  return choice === 'Continuer';
+  return choice === 'Continuer'; // fermeture (undefined) : on ne bascule pas
 }
 
 /**
@@ -64,7 +69,10 @@ export async function guardAccountSwitch(
   const keep = access.role === 'collaborator' && access.canPush !== false
     ? 'Continuer'
     : 'Changer quand même';
-  const buttons = [useOwner, keep, 'Annuler'].filter((b): b is string => !!b);
+  // Pas d'item « Annuler » dans la liste : VS Code ajoute son propre bouton de
+  // fermeture (« Annuler ») à tout dialogue modal — le nommer ici le ferait
+  // apparaître deux fois, côte à côte.
+  const buttons = [useOwner, keep].filter((b): b is string => !!b);
 
   const choice = await vscode.window.showWarningMessage(
     `${problem} Les commits partiront vers ce dépôt : ` +
@@ -72,7 +80,9 @@ export async function guardAccountSwitch(
     { modal: true },
     ...buttons
   );
-  if (!choice || choice === 'Annuler') return undefined;
+  // Fermeture du dialogue (bouton « Annuler » de VS Code, ou Échap) : le compte
+  // actif ne change pas.
+  if (!choice) return undefined;
   if (useOwner && choice === useOwner) return known!.id;
   return targetId;
 }

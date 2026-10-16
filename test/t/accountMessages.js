@@ -67,6 +67,11 @@ const guard = load('features/accounts/guard.js');
     'un 404 n’est pas présenté comme un refus certain (les deux cas sont nommés)');
   a.inc(modal.actions.join(' | '), 'Utiliser « proprio »',
     'le compte propriétaire déjà enregistré est proposé par son login réel');
+  // Deux items seulement : VS Code ajoute lui-même le bouton de fermeture
+  // (« Annuler ») à tout dialogue modal. Le déclarer ici le doublerait.
+  a.eq(modal.actions.length, 2, 'deux items d’action : « Utiliser … » et « Changer quand même »');
+  a.eq(modal.actions.filter((x) => x === 'Annuler').length, 0,
+    'aucun item « Annuler » déclaré (sinon deux boutons « Annuler » côte à côte)');
   a.ok(!modal.text.includes(TOKEN), 'aucun token ne peut apparaître dans un message');
 
   // Le bouton « Utiliser … » bascule vers le compte propriétaire (décision
@@ -75,9 +80,11 @@ const guard = load('features/accounts/guard.js');
   a.eq(await guard.guardAccountSwitch(context, 'mon-compte'), 'proprio',
     'le bouton « Utiliser » renvoie le compte propriétaire');
 
-  vscode.__reply('warning', 'Annuler');
+  // Fermer le dialogue = annulation : VS Code renvoie undefined quand on clique
+  // son bouton de fermeture (« Annuler ») ou qu'on appuie sur Échap. Aucune
+  // réponse d'item n'est donc programmée ici.
   a.eq(await guard.guardAccountSwitch(context, 'mon-compte'), undefined,
-    'annuler laisse le compte actif inchangé');
+    'fermer le dialogue (annulation) laisse le compte actif inchangé');
 
   // Aucun nom de compte en dur dans ce qui est publié (commentaires mis à part :
   // les exemples de documentation ne s'affichent jamais).

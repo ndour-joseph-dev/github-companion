@@ -71,6 +71,10 @@ remet le compteur à zéro au lieu d'afficher l'état d'avant.
   (explicitement nommé comme tel — ce n'est jamais un compte figé dans l'extension). Un 404 est
   annoncé « accès refusé, **ou** dépôt supprimé », GitHub répondant la même chose dans les deux
   cas. Même filet de sécurité avant un push.
+- **Dialogues qui ne listent que les choix réels** : le bouton **Annuler** est celui que VS Code
+  ajoute lui-même à tout dialogue modal (traduit selon la langue de l'éditeur) ; le redéclarer
+  affichait **deux** boutons « Annuler » côte à côte. Fermer le dialogue (ce bouton, la croix ou
+  Échap) est traité comme un **refus** : le compte actif ne change pas, rien n'est poussé.
 
 ## Token GitHub
 

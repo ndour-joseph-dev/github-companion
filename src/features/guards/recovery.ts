@@ -51,8 +51,9 @@ export async function guardStagedSecrets(git: SimpleGit): Promise<boolean> {
       'Vérifie avant d’envoyer (un secret poussé reste dans l’historique GitHub).',
     { modal: true },
     'Désindexer ces fichiers',
-    'Commiter quand même',
-    'Annuler'
+    // VS Code ajoute le bouton d'annulation de tout dialogue modal : fermer le
+    // dialogue (ou l'item déjà nommé) revient au même — on ne l'écrit pas ici.
+    'Commiter quand même'
   );
 
   if (choice === 'Désindexer ces fichiers') {

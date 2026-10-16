@@ -10,10 +10,10 @@ export async function confirmBehindPush(behind: number): Promise<boolean> {
     `Tu as ${behind} commit(s) distant(s) non récupéré(s). ` +
       'Pousser sur une base ancienne peut créer des conflits.',
     { modal: true },
-    'Pousser quand même',
-    'Annuler'
+    // VS Code ajoute le bouton d'annulation de tout dialogue modal.
+    'Pousser quand même'
   );
-  return choice === 'Pousser quand même';
+  return choice === 'Pousser quand même'; // fermer le dialogue annule le push
 }
 
 /**
